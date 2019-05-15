@@ -20,9 +20,10 @@ class Database(object):
         objects = []
 
         for elem in entries:
-            with open(elem, 'r') as f:
-                file = json.load(f)
-                objects.append(m.Material(file[1],file[0]))
+            loc = self.path + '\{}'.format(elem)
+            material = m.Material(0, 0)
+            material.load(loc)
+            objects.append(material)
 
         self.objects = objects
 
@@ -32,5 +33,5 @@ class Database(object):
         '''
 
         for i in range(len(self.objects)):
-            self.objects[i].save_material(self.path)
+            self.objects[i].save(self.path + "\{}".format(self.objects[i].name) + '.json')
 

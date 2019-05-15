@@ -14,7 +14,7 @@ class Material(object):
     def save(self, loc):
         # file_name = '.'.join([self.name, 'json'])
         with open(loc, 'w') as outfile:
-            json.dump((self.attributes, self.name), outfile, indent=4)
+            json.dump({'name': self.name,'attributes': self.attributes}, outfile, indent=4)
 
     def load(self, loc):
         with open(loc, 'r') as source:
