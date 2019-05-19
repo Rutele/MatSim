@@ -1,0 +1,10 @@
+{
+    "name": "Ge",
+    "attributes": {
+        "Mobility constant": 2,
+        "Electron mobility constant": -1.7,
+        "Hole mobility constant": -2.3,
+        "Energy gap": 0.67,
+        "Constant conductivity": 2170000.0
+    }
+}

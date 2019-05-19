@@ -9,23 +9,20 @@ import Databse
 #Current path directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-materials_path = dir_path + '\materials'
+materials_path = dir_path + '\materials' + '\Ge.json'
 
 
 '''
-obj1 = material.Material('Dupa', {'Nigga': 2, 'Gowno': 6})
-obj1.save(materials_path + '\{}'.format(obj1.name) + '.json')
-obj1.load(materials_path + '\{}'.format(obj1.name) + '.json')
-'''
-
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = gui.MainWindow(dir_path)
     sys.exit(app.exec_())
-
+'''
 '''
 d = Databse.Database(materials_path)
 d.load()
-d.path = dir_path + '\{}'.format('materials')
-d.save()
+d.plot('Electrical conductivity', (1, 20))
+d.path = d.entries[1]
+d.load()
+d.plot('Electrical conductivity', (1, 20))
 '''

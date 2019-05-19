@@ -1,0 +1,10 @@
+{
+    "name": "Si",
+    "attributes": {
+        "Mobility constant": 2,
+        "Electron mobility constant": -2.4,
+        "Hole mobility constant": -2.2,
+        "Energy gap": 1.12,
+        "Constant conductivity": 0.000252
+    }
+}
