@@ -1,10 +1,22 @@
 {
     "name": "Si",
+    "type": "Intrinsic Semiconductor",
     "attributes": {
-        "Mobility constant": 2,
-        "Electron mobility constant": -2.4,
-        "Hole mobility constant": -2.2,
-        "Energy gap": 1.12,
-        "Constant conductivity": 0.000252
+        "Electrical": {
+            "Mobility constant": 2,
+            "Electron mobility constant": -2.4,
+            "Hole mobility constant": -2.2,
+            "Energy gap": 1.12,
+            "Constant conductivity": 0.000252,
+            "Nc": 2.82e+25,
+            "Nv": 1.83e+25,
+            "Maximal diffusion coefficient": 2,
+            "Activation energy": 5
+        },
+        "Optical": {
+            "Extinction coefficient": 0.030209,
+            "Refractive index": 3.9766
+        },
+        "Thermal": {}
     }
 }

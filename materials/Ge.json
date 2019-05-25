@@ -1,10 +1,22 @@
 {
     "name": "Ge",
+    "type": "Intrinsic Semiconductor",
     "attributes": {
-        "Mobility constant": 2,
-        "Electron mobility constant": -1.7,
-        "Hole mobility constant": -2.3,
-        "Energy gap": 0.67,
-        "Constant conductivity": 2170000.0
+        "Electrical": {
+            "Mobility constant": 2,
+            "Electron mobility constant": -1.7,
+            "Hole mobility constant": -2.3,
+            "Energy gap": 0.67,
+            "Constant conductivity": 2170000.0,
+            "Nc": 1.05e+25,
+            "Nv": 3.92e+24,
+            "Maximal diffusion coefficient": 3,
+            "Activation energy": 4
+        },
+        "Optical": {
+            "Extinction coefficient": 1.6774,
+            "Refractive index": 5.6994
+        },
+        "Thermal": {}
     }
 }
