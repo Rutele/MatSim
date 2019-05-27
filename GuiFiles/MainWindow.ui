@@ -100,7 +100,7 @@
      <x>0</x>
      <y>0</y>
      <width>458</width>
-     <height>30</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -108,9 +108,11 @@
      <string>F&amp;ile</string>
     </property>
     <addaction name="separator"/>
+    <addaction name="actionCreate"/>
     <addaction name="actionLoad"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
+    <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -140,6 +142,16 @@
   <action name="actionPlot">
    <property name="text">
     <string>Plot</string>
+   </property>
+  </action>
+  <action name="actionCreate">
+   <property name="text">
+    <string>Create...</string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
    </property>
   </action>
  </widget>

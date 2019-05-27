@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 class Material(object):
 
-    def __init__(self, name='empty', typ=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan, s0=np.nan,
+    def __init__(self, name='empty', type=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan, s0=np.nan,
                  me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan):
         """
         :param name: Name of material
@@ -50,7 +50,7 @@ class Material(object):
         #for thermal
 
         self.name = name
-        self.type = typ
+        self.type = type
 
         self.attributes = {'Electrical':
                                {'Mobility constant': mb_const, 'Electron mobility constant': el_mb_const,
