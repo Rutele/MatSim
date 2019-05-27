@@ -88,8 +88,16 @@ class Material(object):
         """
         type: electrical model
         :param t: temperature
-        :return: value of moblity of electrons
+        :return: value of mobility of electrons
         """
+
+        if self.type == 'Intrinsic Semiconductor':
+            return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical'][
+                'Electron mobility constant']
+        elif self.type == 'Doped Semiconductor':
+            #to be changed
+            return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical'][
+                'Electron mobility constant']
 
     def mobility_of_holes(self, t):
         """
@@ -98,12 +106,47 @@ class Material(object):
         :return: value of the mobility of electrons
         """
 
+        if self.type == 'Intrinsic Semiconductor':
+            return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical']['Hole mobility constant']
+
+        elif self.type == 'Doped Semiconductor':
+            #to be changed
+            return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical'][
+                'Hole mobility constant']
+
     def electrical_conductivity(self, t):
         """
         type: electrical model
         :param t: temperature
         :return: Electrical conductivity
         """
+        if self.type == 'Intrinsic Semiconductor':
+            return self.attributes['Electrical']['Constant conductivity'] + np.exp(
+                -self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
+        elif self.type == 'Doped Semiconductor':
+            mi = np.nan
+            n = np.nan
+            if self.type == 'n-type semiconductor':
+                mi = self.mobility_of_electrons(t)
+                if constants:
+                    n = self.attributes['Electrical']['Nc']
+                elif not constants:
+                    n = self.Nc(t)
+            elif self.type == 'p-type semiconductor':
+                mi = self.mobility_of_holes(t)
+                if constants:
+                    n = self.attributes['Electrical']['Nv']
+                elif not constants:
+                    n = self.Nv(t)
+
+            if t < 100:
+                return self.e * mi * (self.attributes['Electrical']['Nd'] * n) ** 0.5 * np.exp(
+                    -self.attributes['Electrical']['Ionisation Energy'] / (2 * self.kb * t))
+            elif 100 <= t >= 500:
+                return self.e * mi * self.attributes['Electrical']['Nd']
+            elif t > 500:
+                return self.attributes['Electrical']['Constant conductivity'] + np.exp(
+                    -self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
 
     def concentration_of_carriers(self, t, constants=False):
         """
@@ -112,6 +155,22 @@ class Material(object):
         :param constants: True/False, Default is False, True to use constant values of Nc and Nv which are predefined
         :return: concentration of carriers
         """
+        if self.type == 'Intrinsic Semiconductor':
+            if not constants:
+                return (self.Nv(t) * self.Nc(t)) ** 0.5 * np.exp(-self.attributes['Electrical']['Energy gap'] *
+                                                                 self.e / (2 * self.kb * t))
+            if constants:
+                return (self.attributes['Electrical']['Nv'] * self.attributes['Electrical']['Nc']) ** 0.5 * \
+                       np.exp(-self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
+
+        #TO BE DONE, DON'T USE NOW
+        elif self.type == 'Doped Semiconductor':
+            if not constants:
+                nc = self.Nc(t)
+                nv = self.Nv(t)
+            elif constants:
+                nc = self.attributes['Electrical']['Nc']
+                nv = self.attributes['Electrical']['Nv']
 
     def diffusion_coefficient(self, t):
         """
@@ -119,6 +178,14 @@ class Material(object):
         :param t: temperature
         :return: diffusion coefficient
         """
+        if self.type == 'Intrinsic Semiconductor':
+            return self.attributes['Electrical']['D0'] * np.exp(
+                -self.attributes['Electrical']['Activation energy'] / (self.R * t))
+
+        elif self.type == 'Doped Semiconductor':
+            #to be chaned
+            return self.attributes['Electrical']['D0'] * np.exp(
+                -self.attributes['Electrical']['Activation energy'] / (self.R * t))
 
     def Nc(self, t):
         """
@@ -126,6 +193,14 @@ class Material(object):
         :param t: temperature
         :return: effective density of states for electrons
         """
+        if self.type == 'Intrinsic Semiconductor':
+            return 2 * (2 * np.pi * self.attributes['Electrical'][
+                'Effective mass of electrons'] * t / self.h ** 2) ** 1.5
+
+        elif self.type == 'Doped Semiconductor':
+            #to be chaned
+            return 2 * (2 * np.pi * self.attributes['Electrical'][
+                'Effective mass of electrons'] * t / self.h ** 2) ** 1.5
 
     def Nv(self, t):
         """
@@ -133,6 +208,12 @@ class Material(object):
         :param t: temperature
         :return: effective density of states for holes
         """
+        if self.type == 'Intrinsic Semiconductor':
+            return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of holes'] * t / self.h ** 2) ** 1.5
+
+        elif self.type == 'Doped Semiconductor':
+            #to be changed
+            return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of holes'] * t / self.h ** 2) ** 1.5
 
     def absorption(self, lam):
         """
@@ -242,231 +323,4 @@ class Material(object):
     def attributes_keys(self):
         return list(self.attributes.keys())
 
-
-class IntrinsicSemiconductor(Material):
-
-    def __init__(self, name='empty', mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan, s0=np.nan,
-                 me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan):
-        """
-        :param name: Name of material
-
-        Electrical:
-        :param mb_const: Mobility constant [m**2/(V*s*K)]
-        :param el_mb_const: Electron mobility constant [-]
-        :param ho_mb_const: Hole mobility constant [-]
-        :param eg: Energy gap [eV]
-        :param s0: Conductivity constant [S/m]
-        :param me: effective mass of electrons [kg]
-        :param mh: effective mass of holes [kg]
-        :param d0: maximal diffusion coefficient [m*2/s]
-        :param ea: activation energy [J]
-        :param nc: effective density of states in conduction band [m**-3]
-        :param nv: effective density of states in valence band [m**-3]
-
-        Optical:
-        :param k: Extinction coefficient
-        :param n: Refractive index
-
-        Thermal:
-        """
-        typ = 'Intrinsic Semiconductor'
-
-        super().__init__(name, typ, mb_const, el_mb_const, ho_mb_const, eg, s0,
-                 me, mh, d0, ea, k, n, nc, nv)
-
-
-    def mobility_of_electrons(self, t):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: value of moblity of electrons
-        """
-
-        return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical']['Electron mobility constant']
-
-    def mobility_of_holes(self, t):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: value of the mobility of electrons
-        """
-
-        return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical']['Hole mobility constant']
-
-    def electrical_conductivity(self, t):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: Electrical conductivity
-        """
-
-        return self.attributes['Electrical']['Constant conductivity'] + np.exp(-self.attributes['Electrical']['Energy gap'] * self.e/(2 * self.kb * t))
-
-    def concentration_of_carriers(self, t, constants=False):
-        """
-        type: electrical model
-        :param t: temperature
-        :param constants: True/False, Default is False, True to use constant values of Nc and Nv which are predefined in attributes
-        :return: concentration of carriers
-        """
-        if not constants:
-            return (self.Nv(t) * self.Nc(t))**0.5 * np.exp(-self.attributes['Electrical']['Energy gap'] *
-                                                                             self.e/(2 * self.kb * t))
-        if constants:
-            return (self.attributes['Electrical']['Nv'] * self.attributes['Electrical']['Nc'])**0.5 * \
-                   np.exp(-self.attributes['Electrical']['Energy gap'] * self.e/(2 * self.kb * t))
-    def diffusion_coefficient(self, t):
-        """
-        type: electrical model
-        :param t:
-        :return:
-        """
-        return self.attributes['Electrical']['D0'] * np.exp(-self.attributes['Electrical']['Activation energy']/(self.R * t))
-
-    def Nc(self, t):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: effective density of states for electrons
-        """
-        return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of electrons'] * t/self.h**2)**1.5
-
-    def Nv(self, t):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: effective density of states for holes
-        """
-        return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of holes'] * t / self.h ** 2) ** 1.5
-
-class DopedSemiconductor(Material):
-
-    def __init__(self, name='empty', typ='n-type', mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan, s0=np.nan,
-                 me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan, nd=np.nan, ei=np.nan):
-        """
-        :param name: Name of material
-        :param typ: Type of doped semiconductor (n-type/p-type), default n-type
-
-        Electrical:
-        :param mb_const: Mobility constant [m**2/(V*s*K)]
-        :param el_mb_const: Electron mobility constant [-]
-        :param ho_mb_const: Hole mobility constant [-]
-        :param eg: Energy gap [eV]
-        :param s0: Conductivity constant [S/m]
-        :param me: effective mass of electrons [kg]
-        :param mh: effective mass of holes [kg]
-        :param d0: maximal diffusion coefficient [m*2/s]
-        :param ea: activation energy [J]
-        :param nc: effective density of states in conduction band [m**-3]
-        :param nv: effective density of states in valence band [m**-3]
-        :param nd: Dopant concentration [m**-3]
-        "param ei: Ionisation energy [eV]
-
-        Optical:
-        :param k: Extinction coefficient
-        :param n: Refractive index
-
-        Thermal:
-        """
-        typ = typ + ' semiconductor'
-
-        super().__init__(name, typ, mb_const, el_mb_const, ho_mb_const, eg, s0,
-                 me, mh, d0, ea, k, n, nc, nv)
-
-        self.attributes['Electrical']['Nd'] = nd
-        self.attributes['Electrical']['Ionisation energy'] = ei
-
-    def mobility_of_electrons(self, t):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t: temperature
-        :return: value of moblity of electrons
-        """
-
-        return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical']['Electron mobility constant']
-
-    def mobility_of_holes(self, t):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t: temperature
-        :return: value of the mobility of electrons
-        """
-
-        return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical']['Hole mobility constant']
-
-    def electrical_conductivity(self, t, constants=False):
-        """
-        type: electrical model
-        :param t: temperature
-        :return: Electrical conductivity
-        :param constants: True/False, Default is False, True to use constant values of Nc and Nv which are predefined in attributes
-        """
-        mi = np.nan
-        n = np.nan
-        if self.type == 'n-type semiconductor':
-            mi = self.mobility_of_electrons(t)
-            if constants:
-                n = self.attributes['Electrical']['Nc']
-            elif not constants:
-                n = self.Nc(t)
-        elif self.type == 'p-type semiconductor':
-            mi = self.mobility_of_holes(t)
-            if constants:
-                n = self.attributes['Electrical']['Nv']
-            elif not constants:
-                n = self.Nv(t)
-
-
-        if t < 100:
-            return self.e * mi * (self.attributes['Electrical']['Nd'] * n)**0.5 * np.exp(-self.attributes['Electrical']['Ionisation Energy']/(2*self.kb*t))
-        elif 100 <= t >= 500:
-            return self.e * mi * self.attributes['Electrical']['Nd']
-        elif t > 500:
-            return self.attributes['Electrical']['Constant conductivity'] + np.exp(-self.attributes['Electrical']['Energy gap'] * self.e/(2 * self.kb * t))
-
-
-    #DO IT
-    def concentration_of_carriers(self, t, constants=False):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t: temperature
-        :param constants: True/False, Default is False, True to use constant values of Nc and Nv which are predefined in attributes
-        :return: concentration of carriers
-        """
-        if not constants:
-            nc = self.Nc(t)
-            nv = self.Nv(t)
-        elif constants:
-            nc = self.attributes['Electrical']['Nc']
-            nv = self.attributes['Electrical']['Nv']
-
-    def diffusion_coefficient(self, t):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t:
-        :return:
-        """
-        return self.attributes['Electrical']['D0'] * np.exp(-self.attributes['Electrical']['Activation energy']/(self.R * t))
-
-    def Nc(self, t):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t: temperature
-        :return: effective density of states for electrons
-        """
-        return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of electrons'] * t/self.h**2)**1.5
-
-    def Nv(self, t):
-        # same as intrinsic
-        """
-        type: electrical model
-        :param t: temperature
-        :return: effective density of states for holes
-        """
-        return 2 * (2 * np.pi * self.attributes['Electrical']['Effective mass of holes'] * t / self.h ** 2) ** 1.5
 
