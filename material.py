@@ -39,13 +39,13 @@ class Material(object):
 
         #for electrical:
         if eg <= 0:
-            print('Energy gap have to be positive!')
+            print('Energy gap has to be positive!')
         elif ea <= 0:
-            print('Activation energy have to be positive!')
+            print('Activation energy has to be positive!')
 
         #for optical:
         elif n <= 0:
-            print('Refractive index have to be positive!')
+            print('Refractive index has to be positive!')
 
         #for thermal
 
@@ -68,7 +68,6 @@ class Material(object):
         self.e = 1.60217662e-19 #charge of the electron [C]
         self.R = 8.31446        #gas constant [J/(mol*K)]
         self.h = 6.62607004e-34 #planck constant [m**2 * kg / s]
-
 
     def __str__(self):
         return "Name of the material: " + str(self.name) + "\nAttributes are:\n" + str(self.attributes)
@@ -242,6 +241,7 @@ class Material(object):
     @property
     def attributes_keys(self):
         return list(self.attributes.keys())
+
 
 class IntrinsicSemiconductor(Material):
 

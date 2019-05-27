@@ -55,11 +55,11 @@ class MainWindow(object):
         """
         This function is setting up the displayed values of the loaded/edited material
         """
-        self.window.MobConst.setText(str(self._material.attributes['Mobility constant']))
-        self.window.ConstCond.setText(str(self._material.attributes['Constant conductivity']))
-        self.window.Eg.setText(str(self._material.attributes['Energy gap']))
-        self.window.ElecMobConst.setText(str(self._material.attributes['Electron mobility constant']))
-        self.window.HoleMobConst.setText(str(self._material.attributes['Hole mobility constant']))
+        self.window.MobConst.setText(str(self._material.attributes['Electrical']['Mobility constant']))
+        self.window.ConstCond.setText(str(self._material.attributes['Electrical']['Constant conductivity']))
+        self.window.Eg.setText(str(self._material.attributes['Electrical']['Energy gap']))
+        self.window.ElecMobConst.setText(str(self._material.attributes['Electrical']['Electron mobility constant']))
+        self.window.HoleMobConst.setText(str(self._material.attributes['Electrical']['Hole mobility constant']))
 
     def plot_menu(self):
         self.plotting_window = PlotWindow(self._material, self._current_path)
