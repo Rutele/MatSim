@@ -3,6 +3,7 @@
 import json
 import numpy as np
 from matplotlib import pyplot as plt
+import inspect
 
 
 class Material(object):
@@ -228,7 +229,6 @@ class Material(object):
         :return: absorption
         """
         return 4 * np.pi * self.attributes['Optical']['Extinction coefficient']/lam * 1e7
-
     def thermal_conductivity(self, t):
         """
         type: thermal model
@@ -237,11 +237,14 @@ class Material(object):
         """
         return self.attributes['Thermal']['A'] * (300/t)**self.attributes['Thermal']['B']
 
-    def plot(self, param,  boundary, nt=1000):
+
+
+    def plot(self, param,  boundary, nt=1000, file=None):
         """
         :param param: parameter to plot
         :param boundary: boundary of x as a tuple
         :param nt: number of points between boundary
+        :param file: file location used for exporting the data to text file
         :return: plot
         """
         if param == 'Mobility of electrons':
@@ -337,14 +340,20 @@ class Material(object):
         else:
             return
 
-        plt.figure()
-        plt.plot(x, y, '-b')
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.show()
+        if file is None:
+            plt.figure()
+            plt.plot(x, y, '-b')
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+            plt.show()
+        else:
+            with open(file, 'w') as outfile:
+                outfile.write("Some Stuff   Different Stuff\n")
+                for i in range(x.size):
+                    txt1 = str(x[i])
+                    txt2 = str(y[i])
+                    outfile.write("{}   {}\n".format(txt1, txt2))
 
     @property
     def attributes_keys(self):
         return list(self.attributes.keys())
-
-

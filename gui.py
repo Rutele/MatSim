@@ -1,5 +1,6 @@
 from PyQt5 import uic, QtWidgets
 import os
+import sys
 import material
 
 
@@ -24,6 +25,7 @@ class MainWindow(object):
         self.window.actionSave_as.triggered.connect(self.file_save_as)
         self.window.actionPlot.triggered.connect(self.plot_menu)
         self.window.actionCreate.triggered.connect(self.create_menu)
+        self.window.actionClose.triggered.connect(sys.exit)
 
         #Showing the window
         self.window.show()
@@ -65,18 +67,24 @@ class MainWindow(object):
         self.window.HoleMobConst.setText(str(self._material.attributes['Electrical']['Hole mobility constant']))
 
     def plot_menu(self):
-        self.plotting_window = PlotWindow(self._material, self._current_path)
-        self.plotting_window.window.exec()
+        tmp_material = material.Material(self._material.name,
+                                         self._material.type,
+                                         mb_const=float(self.window.MobConst.text()),
+                                         el_mb_const=float(self.window.ElecMobConst.text()),
+                                         ho_mb_const=float(self.window.HoleMobConst.text()),
+                                         eg=float(self.window.Eg.text()),
+                                         s0=float(self.window.ConstCond.text()))
+        plotting_window = PlotWindow(tmp_material, self._current_path)
+        plotting_window.window.exec()
 
     def create_menu(self):
-        self.creation_window = CreateWindow(self._current_path)
-        self.creation_window.window.exec()
-        self.creation_window.window.result()
-        if self.creation_window.window.result() == 0:
+        creation_window = CreateWindow(self._current_path)
+        creation_window.window.exec()
+        creation_window.window.result()
+        if creation_window.window.result() == 0:
             pass
-        elif self.creation_window.window.result() == 1:
-            self._material = material.Material(name=self.creation_window.name, type=self.creation_window.type)
-            print(self._material)
+        elif creation_window.window.result() == 1:
+            self._material = material.Material(name=creation_window.name, type=creation_window.type)
             self.set_disp_vals()
             self.update_window_name()
 
@@ -87,6 +95,8 @@ class PlotWindow(QtWidgets.QDialog):
         self._current_mat = mat
         self.window = uic.loadUi(os.path.join(path, "GuiFiles/PlotWindow.ui"))
         self.window.PlotBtn.clicked.connect(self.plot)
+        self.window.CancelBtn.clicked.connect(self.window.reject)
+        self.window.ExportToTXTBtn.clicked.connect(self.export_data)
 
     def plot(self):
         tp = float(self.window.Start.text())
@@ -94,6 +104,14 @@ class PlotWindow(QtWidgets.QDialog):
         nt = int(self.window.Points.text())
         param = self.window.ParamList.currentText()
         self._current_mat.plot(str(param), (tp, tk), nt)
+
+    def export_data(self):
+        file = QtWidgets.QFileDialog.getSaveFileName(self.window, 'Export to TXT', '', 'TXT (*.txt)')
+        tp = float(self.window.Start.text())
+        tk = float(self.window.End.text())
+        nt = int(self.window.Points.text())
+        param = self.window.ParamList.currentText()
+        self._current_mat.plot(str(param), (tp, tk), nt, file[0])
 
 
 class CreateWindow(QtWidgets.QDialog):
