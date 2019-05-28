@@ -11,9 +11,9 @@
 			"Effective mass of electrons": 1.08,
 			"Effective mass of holes": 0.57,
             "Maximal diffusion coefficient": 2,
-            "Activation energy": 5
+            "Activation energy": 5,
 			"Nc": 2.82e+25,
-            "Nv": 1.83e+25,
+            "Nv": 1.83e+25
         },
         "Optical": {
             "Extinction coefficient": 0.030209,
