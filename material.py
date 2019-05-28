@@ -7,8 +7,9 @@ from matplotlib import pyplot as plt
 
 class Material(object):
 
-    def __init__(self, name='empty', type=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan, s0=np.nan,
-                 me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan):
+    def __init__(self, name='empty', typ=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan,
+                 s0=np.nan, me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan,
+                 ta=np.nan, tb=np.nan, conditions=True):
         """
         :param name: Name of material
         :param typ: Type of material
@@ -31,26 +32,31 @@ class Material(object):
         :param n: Refractive index
 
         Thermal:
+        :param ta: Thermal conductivity multiplication constant
+        :param tb: Thermal conductivity exponent constant
+
+        Other:
+        :param conditions: True/False, Whether check or not condition for attributes (default True)
         """
 
         super().__init__()
 
-    #initial conditions:
+        # initial conditions:
+        if conditions:
+            # for electrical:
+            if eg <= 0:
+                print('Energy gap has to be positive!')
+            elif ea <= 0:
+                print('Activation energy has to be positive!')
 
-        #for electrical:
-        if eg <= 0:
-            print('Energy gap has to be positive!')
-        elif ea <= 0:
-            print('Activation energy has to be positive!')
+            # for optical:
+            elif n <= 0:
+                print('Refractive index has to be positive!')
 
-        #for optical:
-        elif n <= 0:
-            print('Refractive index has to be positive!')
-
-        #for thermal
+            #for thermal
 
         self.name = name
-        self.type = type
+        self.type = typ
 
         self.attributes = {'Electrical':
                                {'Mobility constant': mb_const, 'Electron mobility constant': el_mb_const,
@@ -62,7 +68,7 @@ class Material(object):
                                {'Extinction coefficient': k,'Refractive index': n},
 
                            'Thermal':
-                               {}
+                               {'A': ta, 'B': tb}
                            }
         self.kb = 1.381e-23     #boltzmann constant [m**2 * kg / (s**2 * K)]
         self.e = 1.60217662e-19 #charge of the electron [C]
@@ -223,6 +229,14 @@ class Material(object):
         """
         return 4 * np.pi * self.attributes['Optical']['Extinction coefficient']/lam * 1e7
 
+    def thermal_conductivity(self, t):
+        """
+        type: thermal model
+        :param t: temperature
+        :return: thermal conductivity [W/(m*K)]
+        """
+        return self.attributes['Thermal']['A'] * (300/t)**self.attributes['Thermal']['B']
+
     def plot(self, param,  boundary, nt=1000):
         """
         :param param: parameter to plot
@@ -309,6 +323,16 @@ class Material(object):
 
             xlabel = 'Wavelength [nm]'
             ylabel = 'Absorption [1/cm]'
+
+        elif param == 'Thermal conductivity':
+            t0 = boundary[0]
+            tk = boundary[1]
+
+            x = np.linspace(t0, tk, nt)
+            y = self.thermal_conductivity(x)
+
+            xlabel = 'Thermal conductivity [W/(m*K)]'
+            ylabel = 'Temperature [K]'
 
         else:
             return

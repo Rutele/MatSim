@@ -8,15 +8,20 @@
             "Hole mobility constant": -2.2,
             "Energy gap": 1.12,
             "Constant conductivity": 0.000252,
-            "Nc": 2.82e+25,
-            "Nv": 1.83e+25,
+			"Effective mass of electrons": 1.08,
+			"Effective mass of holes": 0.57,
             "Maximal diffusion coefficient": 2,
             "Activation energy": 5
+			"Nc": 2.82e+25,
+            "Nv": 1.83e+25,
         },
         "Optical": {
             "Extinction coefficient": 0.030209,
             "Refractive index": 3.9766
         },
-        "Thermal": {}
+        "Thermal": {
+			"A": 1,
+			"B": 1
+		}
     }
 }
