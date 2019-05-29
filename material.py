@@ -3,7 +3,6 @@
 import json
 import numpy as np
 from matplotlib import pyplot as plt
-import inspect
 
 
 class Material(object):
@@ -121,10 +120,11 @@ class Material(object):
             return self.attributes['Electrical']['Mobility constant'] * t ** self.attributes['Electrical'][
                 'Hole mobility constant']
 
-    def electrical_conductivity(self, t):
+    def electrical_conductivity(self, t, constants=False):
         """
         type: electrical model
         :param t: temperature
+        :param constants: True/False If Nc/Nv is constant or not
         :return: Electrical conductivity
         """
         if self.type == 'Intrinsic Semiconductor':
@@ -229,6 +229,7 @@ class Material(object):
         :return: absorption
         """
         return 4 * np.pi * self.attributes['Optical']['Extinction coefficient']/lam * 1e7
+    
     def thermal_conductivity(self, t):
         """
         type: thermal model
@@ -236,8 +237,6 @@ class Material(object):
         :return: thermal conductivity [W/(m*K)]
         """
         return self.attributes['Thermal']['A'] * (300/t)**self.attributes['Thermal']['B']
-
-
 
     def plot(self, param,  boundary, nt=1000, file=None):
         """
@@ -348,7 +347,7 @@ class Material(object):
             plt.show()
         else:
             with open(file, 'w') as outfile:
-                outfile.write("Some Stuff   Different Stuff\n")
+                #outfile.write("Some Stuff   Different Stuff\n")
                 for i in range(x.size):
                     txt1 = str(x[i])
                     txt2 = str(y[i])
