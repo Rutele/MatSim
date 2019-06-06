@@ -351,7 +351,7 @@ class Material(object):
                 for i in range(x.size):
                     txt1 = str(x[i])
                     txt2 = str(y[i])
-                    outfile.write("{}   {}\n".format(txt1, txt2))
+                    outfile.write("{}\t{}\n".format(txt1, txt2))
 
     @property
     def attributes_keys(self):
