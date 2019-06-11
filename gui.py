@@ -2,19 +2,24 @@ from PyQt5 import uic, QtWidgets
 import os
 import sys
 import material
+from copy import copy
 
 
 class MainWindow(object):
 
     window = None
     _material = None
+    mod_material = None
     _file = None
     _current_path = None
+    message = None
 
     def __init__(self, path):
         #Initial data setup
         self._material = material.Material('', {})
+        self.mod_material = material.Material('', {})
         self._current_path = path
+        self.message = QtWidgets.QMessageBox()
 
         #Loading the GUI file from Qt Designer
         self.window = uic.loadUi(os.path.join(self._current_path, "GuiFiles/MainWindowAlternate.ui"))
@@ -27,6 +32,7 @@ class MainWindow(object):
         self.window.actionCreate.triggered.connect(self.create_menu)
         self.window.attributesBox.activated.connect(self.update_value)
         self.window.actionClose.triggered.connect(sys.exit)
+        self.window.valueEdit.editingFinished.connect(self.update_material_value)
 
         #Showing the window
         self.window.show()
@@ -37,7 +43,11 @@ class MainWindow(object):
             pass
         else:
             self._material.load(self._file[0])
+            self.mod_material = copy(self._material)
+            self.window.attributesBox.clear()
             self.set_disp_vals_combo()
+            self.update_value()
+            self.update_window_name()
 
     def file_save(self):
         if not self._file:
@@ -57,16 +67,6 @@ class MainWindow(object):
     def update_window_name(self):
         self.window.setWindowTitle(self._material.name)
 
-    def set_disp_vals(self):
-        """
-        This function is setting up the displayed values of the loaded/edited material
-        """
-        self.window.MobConst.setText(str(self._material.attributes['Electrical']['Mobility constant']))
-        self.window.ConstCond.setText(str(self._material.attributes['Electrical']['Constant conductivity']))
-        self.window.Eg.setText(str(self._material.attributes['Electrical']['Energy gap']))
-        self.window.ElecMobConst.setText(str(self._material.attributes['Electrical']['Electron mobility constant']))
-        self.window.HoleMobConst.setText(str(self._material.attributes['Electrical']['Hole mobility constant']))
-
     def set_disp_vals_combo(self):
         for key in self._material.attributes.keys():
             for attribute in self._material.attributes[key]:
@@ -77,15 +77,13 @@ class MainWindow(object):
             if self.window.attributesBox.currentText() in self._material.attributes[key]:
                 self.window.valueEdit.setText(str(self._material.attributes[key][self.window.attributesBox.currentText()]))
 
+    def update_material_value(self):
+        for key in self.mod_material.attributes.keys():
+            if self.window.attributesBox.currentText() in self.mod_material.attributes[key]:
+                self.mod_material.attributes[key][self.window.attributesBox.currentText()] = float(self.window.valueEdit.text())
+
     def plot_menu(self):
-        tmp_material = material.Material(self._material.name,
-                                         self._material.type,
-                                         mb_const=float(self.window.MobConst.text()),
-                                         el_mb_const=float(self.window.ElecMobConst.text()),
-                                         ho_mb_const=float(self.window.HoleMobConst.text()),
-                                         eg=float(self.window.Eg.text()),
-                                         s0=float(self.window.ConstCond.text()))
-        plotting_window = PlotWindow(tmp_material, self._current_path)
+        plotting_window = PlotWindow(self.mod_material, self._current_path)
         plotting_window.window.exec()
 
     def create_menu(self):
@@ -101,28 +99,111 @@ class MainWindow(object):
 
 
 class PlotWindow(QtWidgets.QDialog):
+
+    message = None
+    isLam = None
+
     def __init__(self, mat, path):
         super().__init__()
         self._current_mat = mat
+        self.message = QtWidgets.QMessageBox()
         self.window = uic.loadUi(os.path.join(path, "GuiFiles/PlotWindow.ui"))
         self.window.PlotBtn.clicked.connect(self.plot)
         self.window.CancelBtn.clicked.connect(self.window.reject)
         self.window.ExportToTXTBtn.clicked.connect(self.export_data)
+        self.window.ParamList.currentIndexChanged.connect(self.disable_edit)
+        self.disable_edit()
+        self.isLam = False
 
     def plot(self):
-        tp = float(self.window.Start.text())
-        tk = float(self.window.End.text())
-        nt = int(self.window.Points.text())
-        param = self.window.ParamList.currentText()
-        self._current_mat.plot(str(param), (tp, tk), nt)
+        try:
+            if self.isLam:
+                if float(self.window.StartLam.text()) > float(self.window.EndLam.text()):
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Starting point can not be larger than the ending point.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                elif float(self.window.StartLam.text()) < 0 or float(self.window.EndLam.text()) < 0:
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Range can not have negative values.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                elif int(self.window.PointsLam.text()) <= 0:
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Step has to be non-zero, positive value.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                else:
+                    tp = float(self.window.StartLam.text())
+                    tk = float(self.window.EndLam.text())
+                    nt = float(self.window.PointsLam.text())
+                    param = self.window.ParamList.currentText()
+                    self._current_mat.plot(str(param), (tp, tk), nt)
+            elif not self.isLam:
+                if float(self.window.Start.text()) > float(self.window.End.text()):
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Starting point can not be larger than the ending point.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                elif float(self.window.Start.text()) < 0 or float(self.window.End.text()) < 0:
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Range can not have negative values.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                elif int(self.window.Points.text()) <= 0:
+                    self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                    self.message.setWindowTitle("Incorrect values")
+                    self.message.setText("Step has to be non-zero, positive value.")
+                    self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    self.message.exec()
+                else:
+                    tp = float(self.window.Start.text())
+                    tk = float(self.window.End.text())
+                    nt = float(self.window.Points.text())
+                    param = self.window.ParamList.currentText()
+                    self._current_mat.plot(str(param), (tp, tk), nt)
+        except ValueError:
+            self.message.setIcon(QtWidgets.QMessageBox.Warning)
+            self.message.setWindowTitle("Incorrect values")
+            self.message.setText("Please enter a number.")
+            self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            self.message.exec()
 
     def export_data(self):
         file = QtWidgets.QFileDialog.getSaveFileName(self.window, 'Export to TXT', '', 'TXT (*.txt)')
-        tp = float(self.window.Start.text())
-        tk = float(self.window.End.text())
-        nt = int(self.window.Points.text())
+        if self.window.ParamList.currentText() == "Absorption":
+            tp = float(self.window.StartLam.text())
+            tk = float(self.window.EndLam.text())
+            nt = int(self.window.PointsLam.text())
+        else:
+            tp = float(self.window.Start.text())
+            tk = float(self.window.End.text())
+            nt = int(self.window.Points.text())
         param = self.window.ParamList.currentText()
         self._current_mat.plot(str(param), (tp, tk), nt, file[0])
+
+    def disable_edit(self):
+        if self.window.ParamList.currentText() == "Absorption":
+            self.window.Start.setDisabled(True)
+            self.window.End.setDisabled(True)
+            self.window.Points.setDisabled(True)
+            self.window.StartLam.setDisabled(False)
+            self.window.EndLam.setDisabled(False)
+            self.window.PointsLam.setDisabled(False)
+            self.isLam = True
+        else:
+            self.window.Start.setDisabled(False)
+            self.window.End.setDisabled(False)
+            self.window.Points.setDisabled(False)
+            self.window.StartLam.setDisabled(True)
+            self.window.EndLam.setDisabled(True)
+            self.window.PointsLam.setDisabled(True)
+            self.isLam = False
 
 
 class CreateWindow(QtWidgets.QDialog):
