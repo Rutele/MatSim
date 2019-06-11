@@ -17,7 +17,7 @@ class MainWindow(object):
         self._current_path = path
 
         #Loading the GUI file from Qt Designer
-        self.window = uic.loadUi(os.path.join(self._current_path, "GuiFiles/MainWindow.ui"))
+        self.window = uic.loadUi(os.path.join(self._current_path, "GuiFiles/MainWindowAlternate.ui"))
 
         #Signals' actions assigments
         self.window.actionLoad.triggered.connect(self.file_open)
@@ -25,6 +25,7 @@ class MainWindow(object):
         self.window.actionSave_as.triggered.connect(self.file_save_as)
         self.window.actionPlot.triggered.connect(self.plot_menu)
         self.window.actionCreate.triggered.connect(self.create_menu)
+        self.window.attributesBox.activated.connect(self.update_value)
         self.window.actionClose.triggered.connect(sys.exit)
 
         #Showing the window
@@ -36,7 +37,7 @@ class MainWindow(object):
             pass
         else:
             self._material.load(self._file[0])
-            self.set_disp_vals()
+            self.set_disp_vals_combo()
 
     def file_save(self):
         if not self._file:
@@ -65,6 +66,16 @@ class MainWindow(object):
         self.window.Eg.setText(str(self._material.attributes['Electrical']['Energy gap']))
         self.window.ElecMobConst.setText(str(self._material.attributes['Electrical']['Electron mobility constant']))
         self.window.HoleMobConst.setText(str(self._material.attributes['Electrical']['Hole mobility constant']))
+
+    def set_disp_vals_combo(self):
+        for key in self._material.attributes.keys():
+            for attribute in self._material.attributes[key]:
+                self.window.attributesBox.addItem(attribute)
+
+    def update_value(self):
+        for key in self._material.attributes.keys():
+            if self.window.attributesBox.currentText() in self._material.attributes[key]:
+                self.window.valueEdit.setText(str(self._material.attributes[key][self.window.attributesBox.currentText()]))
 
     def plot_menu(self):
         tmp_material = material.Material(self._material.name,
