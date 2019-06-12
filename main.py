@@ -12,13 +12,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 materials_path = dir_path + '\materials' + '\Ge.json'
 
-
-"""
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = gui.MainWindow(dir_path)
     sys.exit(app.exec_())
-"""
+
 '''
 d = Databse.Database(materials_path)
 d.load()
@@ -26,7 +24,6 @@ d.plot('Electrical conductivity', (1, 20))
 d.path = d.entries[1]
 d.load()
 d.plot('Electrical conductivity', (1, 20))
-'''
 
 func = {'multiplication': ['T', 'T*2'], 'division': ['T', 'T/2']}
 attributes = {'Thermal': {'Energy_gap': ['<2', '>-2'], 'Mobility': ['!=0']},
@@ -37,4 +34,8 @@ type_ = 'Semiconductor'
 res = Materialinator.Function(func, attributes, type_)
 res.import_()
 
+
 res.load(dir_path + '/fun.json')
+=======
+res.save(dir_path + '/fun.json')
+'''

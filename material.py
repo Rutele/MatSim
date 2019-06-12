@@ -9,7 +9,7 @@ class Material(object):
 
     def __init__(self, name='empty', typ=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan,
                  s0=np.nan, me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan,
-                 ta=np.nan, tb=np.nan, conditions=True):
+                 ta=np.nan, tb=np.nan, conditions=True, atr_dict=None):
         """
         :param name: Name of material
         :param typ: Type of material
@@ -53,23 +53,25 @@ class Material(object):
             elif n <= 0:
                 print('Refractive index has to be positive!')
 
-            #for thermal
-
         self.name = name
         self.type = typ
 
-        self.attributes = {'Electrical':
-                               {'Mobility constant': mb_const, 'Electron mobility constant': el_mb_const,
-                                'Hole mobility constant': ho_mb_const, 'Energy gap': eg, 'Constant conductivity': s0,
-                                'Effective mass of electrons': me, 'Effective mass of holes': mh,
-                                'Maximal diffusion coefficient': d0, 'Activation energy': ea, 'Nc': nc, 'Nv': nv},
+        if atr_dict is not None:
+            self.attributes = atr_dict
+        else:
+            self.attributes = {'Electrical':
+                                   {'Mobility constant': mb_const, 'Electron mobility constant': el_mb_const,
+                                    'Hole mobility constant': ho_mb_const, 'Energy gap': eg, 'Constant conductivity': s0,
+                                    'Effective mass of electrons': me, 'Effective mass of holes': mh,
+                                    'Maximal diffusion coefficient': d0, 'Activation energy': ea, 'Nc': nc, 'Nv': nv},
 
-                           'Optical':
-                               {'Extinction coefficient': k,'Refractive index': n},
+                               'Optical':
+                                   {'Extinction coefficient': k,'Refractive index': n},
 
-                           'Thermal':
-                               {'A': ta, 'B': tb}
-                           }
+                               'Thermal':
+                                   {'A': ta, 'B': tb}
+                               }
+
         self.kb = 1.381e-23     #boltzmann constant [m**2 * kg / (s**2 * K)]
         self.e = 1.60217662e-19 #charge of the electron [C]
         self.R = 8.31446        #gas constant [J/(mol*K)]
@@ -250,7 +252,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.mobility_of_electrons(x)
 
             xlabel = 'Temperature [K]'
@@ -260,7 +262,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.mobility_of_holes(x)
 
             xlabel = 'Temperature [K]'
@@ -270,7 +272,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.electrical_conductivity(x)
 
             xlabel = 'Temperature [K]'
@@ -280,7 +282,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.concentration_of_carriers(x)
 
             xlabel = 'Temperature [K]'
@@ -290,7 +292,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.diffusion_coefficient(x)
 
             xlabel = 'Temperature [K]'
@@ -300,7 +302,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.Nc(x)
 
             xlabel = 'Temperature [K]'
@@ -310,7 +312,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.Nv(x)
 
             xlabel = 'Temperature [K]'
@@ -320,7 +322,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.absorption(x)
 
             xlabel = 'Wavelength [nm]'
@@ -330,7 +332,7 @@ class Material(object):
             t0 = boundary[0]
             tk = boundary[1]
 
-            x = np.linspace(t0, tk, nt)
+            x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.thermal_conductivity(x)
 
             xlabel = 'Thermal conductivity [W/(m*K)]'
