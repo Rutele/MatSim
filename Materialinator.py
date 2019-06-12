@@ -7,7 +7,7 @@ class Function(object):
     def __init__(self, funcs, attributes, type_, dir_=os.path.dirname(os.path.realpath(__file__))+'/func.py'):
         """
         :param funcs: functions in form {'name': ['variables', 'function' ]
-        :param attributes: used constants in form of the dictionary {'simulation': [value_name]} !!don't use spaces
+        :param attributes: used constants in form of the dictionary {'simulation': {'value_name': [conditions]}} !!don't use spaces, conditions is in form >2, !=1 or <5. If no conditions leave empty list.
         :param type_: type of the material
         :param dir_: directory of the imported code
         """
@@ -26,21 +26,44 @@ class Function(object):
             file.write('class Material(object):\n\n')
 
             #__init__
+
             ##__init__ input
             var = [x for sublist in self.attributes.values() for x in sublist]
             input_ = str([s + '=np.nan' for s in var]).replace("[", "").replace("]", "").replace("'", "")
+
             ##__init__ definition
-            file.write("\tdef __init__(self, name='empty', " + input_ +'):\n')
+            file.write("\tdef __init__(self, name='empty', " + input_ +'):\n\n')
+
+            ##_init__ conditions
+            attributes_keys = list(self.attributes.keys())
+            attributes_values_long = list(self.attributes.values())
+            attributes_conditions = []
+            attributes_values = []
+            for g in range(len(attributes_values_long)):
+                attributes_conditions.append(list(attributes_values_long[g].values()))
+                attributes_values.append(list(attributes_values_long[g].keys()))
+
+
+            attributes_conditions = [item for sublist in attributes_conditions for item in sublist]
+            attributes_values_list = [item for sublist in attributes_values for item in sublist]
+
+
+
+            for q in range(len(attributes_values_list)):
+                for qs in range(len(attributes_conditions[q])):
+                    file.write("\t\tif {}{}:\n".format(attributes_values_list[q],attributes_conditions[q][qs]))
+                    file.write("\t\t\tprint('{} have to be {}')\n".format(attributes_values_list[q],attributes_conditions[q][qs]))
+
+            file.write('\n')
+
             ##__init__ class variables definition
             file.write('\t\tself.name = name\n')
+
             ###atributes
-            attributes_keys = list(self.attributes.keys())
-            attributes_values = list(self.attributes.values())
 
             values = []
             for i in range(len(attributes_values)):
                 values.append(["'" + x + "'" + ':{}'.format(x) for x in attributes_values[i]])
-
 
             dicts = []
             for j in range(len(attributes_keys)):
@@ -96,10 +119,13 @@ class Function(object):
 
     def save(self, loc):
         with open(loc, 'w') as outfile:
-            json.dump(self.funcs, outfile, indent=4)
+            json.dump({'Functions': self.funcs, 'Attributes': self.attributes, 'Type': self.type, 'Dir': self.dir}, outfile, indent=4)
 
     def load(self, loc):
         with open(loc, 'r') as source:
-            self.funcs = json.load(source)
-
+            data = json.load(source)
+            self.funcs = data['Functions']
+            self.attributes = data['Attributes']
+            self.type = data['Type']
+            self.dir = data['Dir']
 
