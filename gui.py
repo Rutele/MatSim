@@ -2,6 +2,7 @@ from PyQt5 import uic, QtWidgets
 import os
 import sys
 import material
+import database
 from copy import copy
 
 
@@ -30,9 +31,10 @@ class MainWindow(object):
         self.window.actionSave_as.triggered.connect(self.file_save_as)
         self.window.actionPlot.triggered.connect(self.plot_menu)
         self.window.actionCreate.triggered.connect(self.create_menu)
+        self.window.actionMaterial_database.triggered.connect(self.database_menu)
         self.window.attributesBox.activated.connect(self.update_value)
         self.window.actionClose.triggered.connect(sys.exit)
-        self.window.valueEdit.editingFinished.connect(self.update_material_value)
+        self.window.valueEdit.returnPressed.connect(self.check_input)
 
         #Showing the window
         self.window.show()
@@ -55,14 +57,14 @@ class MainWindow(object):
         elif self._file == ('', ''):
             self.file_save_as()
         else:
-            self._material.save(self._file[0])
+            self.mod_material.save(self._file[0])
 
     def file_save_as(self):
         self._file = QtWidgets.QFileDialog.getSaveFileName(self.window, 'Save File', '', 'JSON (*.json)')
         if self._file == ('', ''):
             pass
         else:
-            self._material.save(self._file[0])
+            self.mod_material.save(self._file[0])
 
     def update_window_name(self):
         self.window.setWindowTitle(self._material.name)
@@ -76,11 +78,48 @@ class MainWindow(object):
         for key in self._material.attributes.keys():
             if self.window.attributesBox.currentText() in self._material.attributes[key]:
                 self.window.valueEdit.setText(str(self._material.attributes[key][self.window.attributesBox.currentText()]))
+                self.update_unit()
 
     def update_material_value(self):
         for key in self.mod_material.attributes.keys():
             if self.window.attributesBox.currentText() in self.mod_material.attributes[key]:
                 self.mod_material.attributes[key][self.window.attributesBox.currentText()] = float(self.window.valueEdit.text())
+
+    def check_input(self):
+        try:
+            float(self.window.valueEdit.text())
+            if self.window.attributesBox.currentText() == "Refractive index" and float(self.window.valueEdit.text()) < 1:
+                self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                self.message.setWindowTitle("Incorrect values")
+                self.message.setText("Refractive index can't be smaller than one.")
+                self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                self.message.exec()
+            else:
+                self.update_material_value()
+        except ValueError:
+            self.message.setIcon(QtWidgets.QMessageBox.Warning)
+            self.message.setWindowTitle("Incorrect values")
+            self.message.setText("Please enter a number.")
+            self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            self.message.exec()
+
+    def update_unit(self):
+        if self.window.attributesBox.currentText() == "Energy gap":
+            self.window.unitLabel.setText("[eV]")
+        elif self.window.attributesBox.currentText() == "Effective mass of electrons" or self.window.attributesBox.currentText() == "Effective mass of holes":
+            self.window.unitLabel.setText("[kg]")
+        elif self.window.attributesBox.currentText() == "Conductivity constant":
+            self.window.unitLabel.setText("[S/m]")
+        elif self.window.attributesBox.currentText() == "Mobility constant":
+            self.window.unitLabel.setText("[m**2/(V*s*K)]")
+        elif self.window.attributesBox.currentText() == "Maximal diffusion coefficient":
+            self.window.unitLabel.setText("[m**2/s]")
+        elif self.window.attributesBox.currentText() == "Activation energy":
+            self.window.unitLabel.setText("[J]")
+        elif self.window.attributesBox.currentText() == "Nc" or self.window.attributesBox.currentText() == "Nv":
+            self.window.unitLabel.setText("[m**-3]")
+        else:
+            self.window.unitLabel.setText("")
 
     def plot_menu(self):
         plotting_window = PlotWindow(self.mod_material, self._current_path)
@@ -89,12 +128,22 @@ class MainWindow(object):
     def create_menu(self):
         creation_window = CreateWindow(self._current_path)
         creation_window.window.exec()
-        creation_window.window.result()
         if creation_window.window.result() == 0:
             pass
         elif creation_window.window.result() == 1:
-            self._material = material.Material(name=creation_window.name, type=creation_window.type)
+            self._material = material.Material(name=creation_window.name, typ=creation_window.type)
             self.set_disp_vals()
+            self.update_window_name()
+
+    def database_menu(self):
+        database_window = DatabaseWindow(self._current_path)
+        database_window.window.exec()
+        if database_window.window.result() == 1:
+            self._material.load(loc=database_window.material_to_load)
+            self.mod_material = copy(self._material)
+            self.window.attributesBox.clear()
+            self.set_disp_vals_combo()
+            self.update_value()
             self.update_window_name()
 
 
@@ -130,7 +179,7 @@ class PlotWindow(QtWidgets.QDialog):
                     self.message.setText("Range can not have negative values.")
                     self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     self.message.exec()
-                elif int(self.window.PointsLam.text()) <= 0:
+                elif float(self.window.PointsLam.text()) <= 0:
                     self.message.setIcon(QtWidgets.QMessageBox.Warning)
                     self.message.setWindowTitle("Incorrect values")
                     self.message.setText("Step has to be non-zero, positive value.")
@@ -155,7 +204,7 @@ class PlotWindow(QtWidgets.QDialog):
                     self.message.setText("Range can not have negative values.")
                     self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     self.message.exec()
-                elif int(self.window.Points.text()) <= 0:
+                elif float(self.window.Points.text()) <= 0:
                     self.message.setIcon(QtWidgets.QMessageBox.Warning)
                     self.message.setWindowTitle("Incorrect values")
                     self.message.setText("Step has to be non-zero, positive value.")
@@ -179,11 +228,11 @@ class PlotWindow(QtWidgets.QDialog):
         if self.window.ParamList.currentText() == "Absorption":
             tp = float(self.window.StartLam.text())
             tk = float(self.window.EndLam.text())
-            nt = int(self.window.PointsLam.text())
+            nt = float(self.window.PointsLam.text())
         else:
             tp = float(self.window.Start.text())
             tk = float(self.window.End.text())
-            nt = int(self.window.Points.text())
+            nt = float(self.window.Points.text())
         param = self.window.ParamList.currentText()
         self._current_mat.plot(str(param), (tp, tk), nt, file[0])
 
@@ -229,3 +278,38 @@ class CreateWindow(QtWidgets.QDialog):
 
     def set_type_doped(self):
         self.type = "Doped Semiconductor"
+
+
+class DatabaseWindow(QtWidgets.QDialog):
+
+    db = None
+    message = None
+    material_to_load = None
+
+    def __init__(self, path):
+        super().__init__()
+        self.material_to_load = None
+        self.db = database.Database()
+        self.db.load_db()
+        self.message = QtWidgets.QMessageBox()
+        self.window = uic.loadUi(os.path.join(path, "GuiFiles/Database.ui"))
+        self.window.cancelBtn.clicked.connect(self.window.reject)
+        self.window.loadBtn.clicked.connect(self.load)
+        self.update_box()
+
+    def update_box(self):
+        for entry in self.db.loaded_materials:
+            self.window.materialBox.addItem(entry[0])
+
+    def load(self):
+        if not self.db.loaded_materials:
+            self.message.setIcon(QtWidgets.QMessageBox.Warning)
+            self.message.setWindowTitle("No materials")
+            self.message.setText("No material was chosen or no materials were found.")
+            self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            self.message.exec()
+        else:
+            for mat in self.db.loaded_materials:
+                if mat[0] == self.window.materialBox.currentText():
+                    self.material_to_load = mat[1]
+                    self.window.accept()

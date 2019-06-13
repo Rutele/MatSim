@@ -22,7 +22,7 @@ class Material(object):
         :param s0: Conductivity constant [S/m]
         :param me: effective mass of electrons [kg]
         :param mh: effective mass of holes [kg]
-        :param d0: maximal diffusion coefficient [m*2/s]
+        :param d0: maximal diffusion coefficient [m**2/s]
         :param ea: activation energy [J]
         :param nc: effective density of states in conduction band [m**-3]
         :param nv: effective density of states in valence band [m**-3]
