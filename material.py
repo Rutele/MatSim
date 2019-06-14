@@ -9,7 +9,7 @@ class Material(object):
 
     def __init__(self, name='empty', typ=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan,
                  s0=np.nan, me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan,
-                 ta=np.nan, tb=np.nan, conditions=True, atr_dict=None):
+                 nd=np.nan, ei=np.nan,ta=np.nan, tb=np.nan, conditions=True, atr_dict=None):
         """
         :param name: Name of material
         :param typ: Type of material
@@ -22,10 +22,12 @@ class Material(object):
         :param s0: Conductivity constant [S/m]
         :param me: effective mass of electrons [kg]
         :param mh: effective mass of holes [kg]
-        :param d0: maximal diffusion coefficient [m**2/s]
+        :param d0: maximal diffusion coefficient [m*2/s]
         :param ea: activation energy [J]
         :param nc: effective density of states in conduction band [m**-3]
         :param nv: effective density of states in valence band [m**-3]
+		:param nd: effective density of states in donor band [m**-3]
+		:param ei: Intrinsic Fermi level [eV]
 
         Optical:
         :param k: Extinction coefficient
@@ -63,7 +65,8 @@ class Material(object):
                                    {'Mobility constant': mb_const, 'Electron mobility constant': el_mb_const,
                                     'Hole mobility constant': ho_mb_const, 'Energy gap': eg, 'Constant conductivity': s0,
                                     'Effective mass of electrons': me, 'Effective mass of holes': mh,
-                                    'Maximal diffusion coefficient': d0, 'Activation energy': ea, 'Nc': nc, 'Nv': nv},
+                                    'Maximal diffusion coefficient': d0, 'Activation energy': ea, 'Nc': nc, 'Nv': nv,
+									'Nd':nd, 'Ei':ei},
 
                                'Optical':
                                    {'Extinction coefficient': k,'Refractive index': n},
@@ -151,17 +154,18 @@ class Material(object):
             if t < 100:
                 return self.e * mi * (self.attributes['Electrical']['Nd'] * n) ** 0.5 * np.exp(
                     -self.attributes['Electrical']['Ionisation Energy'] / (2 * self.kb * t))
-            elif 100 <= t >= 500:
+            elif 100 <= t <= 500:
                 return self.e * mi * self.attributes['Electrical']['Nd']
             elif t > 500:
                 return self.attributes['Electrical']['Constant conductivity'] + np.exp(
                     -self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
 
-    def concentration_of_carriers(self, t, constants=False):
+    def concentration_of_carriers(self, t, constants=False, type_='n'):
         """
         type: electrical model
         :param t: temperature
         :param constants: True/False, Default is False, True to use constant values of Nc and Nv which are predefined
+		:param type_: which type of carriers can be p or n, default n
         :return: concentration of carriers
         """
         if self.type == 'Intrinsic Semiconductor':
@@ -170,9 +174,8 @@ class Material(object):
                                                                  self.e / (2 * self.kb * t))
             if constants:
                 return (self.attributes['Electrical']['Nv'] * self.attributes['Electrical']['Nc']) ** 0.5 * \
-                       np.exp(-self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
+						np.exp(-self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
 
-        #TO BE DONE, DON'T USE NOW
         elif self.type == 'Doped Semiconductor':
             if not constants:
                 nc = self.Nc(t)
@@ -180,6 +183,19 @@ class Material(object):
             elif constants:
                 nc = self.attributes['Electrical']['Nc']
                 nv = self.attributes['Electrical']['Nv']
+            
+            if type_ == 'n':
+                nx=nc
+            elif type_ == 'p':
+                nx=nv	
+			
+            if t < 100:
+                return (self.attributes['Electrical']['Nd']*nx/2)**0.5 * np.exp(-self.attributes['Electrical']['Ei'] * self.e/(2*self.kb*t))
+            elif 100 <= t <= 500:
+                return self.attributes['Electrical']['Nd']
+            elif t >= 500:
+                return (nv * nc) ** 0.5 * np.exp(-self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
+			
 
     def diffusion_coefficient(self, t):
         """
