@@ -7,7 +7,7 @@
             "Electron mobility constant": -2.4,
             "Hole mobility constant": -2.2,
             "Energy gap": 1.12,
-            "Constant conductivity": 0.000252,
+            "Conductivity constant": 0.000252,
 			"Effective mass of electrons": 1.08,
 			"Effective mass of holes": 0.57,
             "Maximal diffusion coefficient": 2,

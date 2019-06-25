@@ -9,7 +9,7 @@ class Material(object):
 
     def __init__(self, name='empty', typ=np.nan, mb_const=np.nan, el_mb_const=np.nan, ho_mb_const=np.nan, eg=np.nan,
                  s0=np.nan, me=np.nan, mh=np.nan, d0=np.nan, ea=np.nan, k=np.nan, n=np.nan, nc=np.nan, nv=np.nan,
-                 nd=np.nan, ei=np.nan,ta=np.nan, tb=np.nan, conditions=True, atr_dict=None):
+                 nd=np.nan, ei=np.nan, ta=np.nan, tb=np.nan, conditions=True, atr_dict=None):
         """
         :param name: Name of material
         :param typ: Type of material
@@ -133,7 +133,7 @@ class Material(object):
         :return: Electrical conductivity
         """
         if self.type == 'Intrinsic Semiconductor':
-            return self.attributes['Electrical']['Constant conductivity'] + np.exp(
+            return self.attributes['Electrical']['Conductivity constant'] + np.exp(
                 -self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
         elif self.type == 'Doped Semiconductor':
             mi = np.nan
@@ -157,7 +157,7 @@ class Material(object):
             elif 100 <= t <= 500:
                 return self.e * mi * self.attributes['Electrical']['Nd']
             elif t > 500:
-                return self.attributes['Electrical']['Constant conductivity'] + np.exp(
+                return self.attributes['Electrical']['Conductivity constant'] + np.exp(
                     -self.attributes['Electrical']['Energy gap'] * self.e / (2 * self.kb * t))
 
     def concentration_of_carriers(self, t, constants=False, type_='n'):
@@ -351,8 +351,8 @@ class Material(object):
             x = np.linspace(t0, tk, (tk-t0)/nt)
             y = self.thermal_conductivity(x)
 
-            xlabel = 'Thermal conductivity [W/(m*K)]'
-            ylabel = 'Temperature [K]'
+            ylabel = 'Thermal conductivity [W/(m*K)]'
+            xlabel = 'Temperature [K]'
 
         else:
             return
@@ -364,8 +364,12 @@ class Material(object):
             plt.ylabel(ylabel)
             plt.show()
         else:
+            if param == "Absorption":
+                fun_var = "Wavelength [nm]"
+            else:
+                fun_var = "Temperature [K]"
             with open(file, 'w') as outfile:
-                #outfile.write("Some Stuff   Different Stuff\n")
+                outfile.write("#{}  {}\n".format(param, fun_var))
                 for i in range(x.size):
                     txt1 = str(x[i])
                     txt2 = str(y[i])

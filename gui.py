@@ -21,7 +21,6 @@ class MainWindow(object):
         self.mod_material = material.Material('', {})
         self._current_path = path
         self.message = QtWidgets.QMessageBox()
-
         #Loading the GUI file from Qt Designer
         self.window = uic.loadUi(os.path.join(self._current_path, "GuiFiles/MainWindowAlternate.ui"))
 
@@ -67,7 +66,7 @@ class MainWindow(object):
             self.mod_material.save(self._file[0])
 
     def update_window_name(self):
-        self.window.setWindowTitle(self._material.name)
+        self.window.setWindowTitle("MatSim - {}".format(self._material.name))
 
     def set_disp_vals_combo(self):
         for key in self._material.attributes.keys():
@@ -87,11 +86,28 @@ class MainWindow(object):
 
     def check_input(self):
         try:
-            float(self.window.valueEdit.text())
-            if self.window.attributesBox.currentText() == "Refractive index" and float(self.window.valueEdit.text()) < 1:
+            if self.window.attributesBox.currentText() == "Refractive index" and float(self.window.valueEdit.text()) <= 0:
                 self.message.setIcon(QtWidgets.QMessageBox.Warning)
                 self.message.setWindowTitle("Incorrect values")
-                self.message.setText("Refractive index can't be smaller than one.")
+                self.message.setText("Refractive index can't be negative.")
+                self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                self.message.exec()
+            elif self.window.attributesBox.currentText() == "Energy gap" and float(self.window.valueEdit.text()) <= 0:
+                self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                self.message.setWindowTitle("Incorrect values")
+                self.message.setText("Energy gap can't be smaller or equal to zero")
+                self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                self.message.exec()
+            elif self.window.attributesBox.currentText() == "Activation energy" and float(self.window.valueEdit.text()) <= 0:
+                self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                self.message.setWindowTitle("Incorrect values")
+                self.message.setText("Activation energy can't be smaller or equal to zero")
+                self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                self.message.exec()
+            elif float(self.window.valueEdit.text()) == 0:
+                self.message.setIcon(QtWidgets.QMessageBox.Warning)
+                self.message.setWindowTitle("Incorrect values")
+                self.message.setText("Please enter non zero value")
                 self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 self.message.exec()
             else:
@@ -122,8 +138,15 @@ class MainWindow(object):
             self.window.unitLabel.setText("")
 
     def plot_menu(self):
-        plotting_window = PlotWindow(self.mod_material, self._current_path)
-        plotting_window.window.exec()
+        if self._material.name == '':
+            self.message.setIcon(QtWidgets.QMessageBox.Warning)
+            self.message.setWindowTitle("No material")
+            self.message.setText("No material loaded. Please load a material first.")
+            self.message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            self.message.exec()
+        else:
+            plotting_window = PlotWindow(self.mod_material, self._current_path)
+            plotting_window.window.exec()
 
     def create_menu(self):
         creation_window = CreateWindow(self._current_path)
@@ -132,7 +155,8 @@ class MainWindow(object):
             pass
         elif creation_window.window.result() == 1:
             self._material = material.Material(name=creation_window.name, typ=creation_window.type)
-            self.set_disp_vals()
+            self.mod_material = self._material
+            self.set_disp_vals_combo()
             self.update_window_name()
 
     def database_menu(self):
@@ -216,7 +240,7 @@ class PlotWindow(QtWidgets.QDialog):
                     nt = float(self.window.Points.text())
                     param = self.window.ParamList.currentText()
                     self._current_mat.plot(str(param), (tp, tk), nt)
-        except ValueError:
+        except TypeError:
             self.message.setIcon(QtWidgets.QMessageBox.Warning)
             self.message.setWindowTitle("Incorrect values")
             self.message.setText("Please enter a number.")
@@ -262,7 +286,7 @@ class CreateWindow(QtWidgets.QDialog):
     def __init__(self, path):
         super().__init__()
         self.name = "empty"
-        self.type = "none"
+        self.type = "Intrinsic semiconductor"
         self.window = uic.loadUi(os.path.join(path, "GuiFiles/CreateMaterial.ui"))
         self.window.cancelButton.clicked.connect(self.window.reject)
         self.window.createButton.clicked.connect(self.accept_form)
